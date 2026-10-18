@@ -1,6 +1,5 @@
 namespace Starter.Application.Common.Persistence;
 
-// Every repository exposes exactly this CRUD surface; changes are only staged until IUnitOfWork saves them.
 public interface IRepository<TModel, in TFilter>
     where TModel : class
     where TFilter : PagedFilter

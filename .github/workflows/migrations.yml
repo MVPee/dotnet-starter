@@ -51,7 +51,6 @@ jobs:
       - name: Build
         run: dotnet build src/Starter.Infrastructure --configuration Release --no-restore
 
-      # Fails when an entity or configuration changed without a matching migration.
       - name: Check for missing migration
         run: >-
           dotnet ef migrations has-pending-model-changes

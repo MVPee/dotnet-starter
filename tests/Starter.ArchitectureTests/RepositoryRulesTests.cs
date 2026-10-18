@@ -4,7 +4,6 @@ using Starter.Application.Common.Persistence;
 
 namespace Starter.ArchitectureTests;
 
-// Critical rule: every repository exposes only the reusable CRUD surface of IRepository and stages changes for IUnitOfWork.
 public sealed class RepositoryRulesTests
 {
     private const string RepositoryBaseTypeName = "Starter.Infrastructure.Persistence.Repository`3";

@@ -10,7 +10,6 @@ internal sealed partial class GlobalExceptionHandler(
 {
     private const string UnexpectedErrorTitle = "An unexpected error occurred.";
     private const string BadRequestTitle = "The request could not be processed.";
-    // Non-standard but widely used (nginx) to mark requests the client abandoned.
     private const int ClientClosedRequestStatusCode = 499;
 
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)

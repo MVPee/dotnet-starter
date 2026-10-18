@@ -3,7 +3,6 @@ using Starter.Domain.Users;
 
 namespace Starter.UnitTests.Fakes;
 
-// Mirrors the EF contract: writes are only staged until FakeUnitOfWork saves them.
 internal sealed class InMemoryUserRepository : IUserRepository, IStagedStore
 {
     private readonly List<User> _users = [];

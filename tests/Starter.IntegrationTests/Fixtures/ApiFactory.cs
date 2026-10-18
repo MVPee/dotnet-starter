@@ -10,7 +10,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     private const string ConnectionStringKey = "ConnectionStrings:Database";
     private const string ApplyMigrationsOnStartupKey = "Database:ApplyMigrationsOnStartup";
     private const string EnabledSettingValue = "true";
-    // Every test client shares one partition (TestServer has no remote IP), so limits must not interfere with functional tests.
+    // TestServer has no remote IP, so all clients share one rate-limit partition and limits must be raised.
     private const string EffectivelyUnlimitedPermits = "100000";
 
     private readonly PostgreSqlContainer _databaseContainer = new PostgreSqlBuilder(PostgresImage).Build();
@@ -25,7 +25,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        // UseSetting feeds host configuration, which Program reads before Build() when registering Infrastructure.
+        // UseSetting is required: Program reads configuration before Build().
         builder.UseSetting(ConnectionStringKey, _databaseContainer.GetConnectionString());
         builder.UseSetting(ApplyMigrationsOnStartupKey, EnabledSettingValue);
         builder.UseSetting(ApiSettingKeys.ReadPermitLimit, EffectivelyUnlimitedPermits);

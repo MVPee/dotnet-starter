@@ -48,7 +48,6 @@ public sealed class User
             createdAt);
     }
 
-    // Rehydration from persistence: values were validated when the user was created.
     public static User Restore(Guid id, string email, string firstName, string lastName, DateTimeOffset createdAt)
         => new(id, email, firstName, lastName, createdAt);
 }

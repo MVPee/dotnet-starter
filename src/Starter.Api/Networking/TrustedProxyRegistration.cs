@@ -9,12 +9,10 @@ internal static class TrustedProxyRegistration
     public static IServiceCollection AddTrustedProxyForwardedHeaders(
         this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
-        // Blank entries count as unset, so clearing the value through an environment variable trips the guard below.
         var trustedNetworks = (configuration.GetSection(TrustedNetworksKey).Get<string[]>() ?? [])
             .Where(trustedNetwork => !string.IsNullOrWhiteSpace(trustedNetwork))
             .Select(ParseTrustedNetwork)
             .ToList();
-        // Without the proxy network every client looks like the proxy, so IP rate limiting would throttle everyone together.
         if (trustedNetworks.Count == 0 && !environment.IsDevelopment())
         {
             throw new InvalidOperationException(

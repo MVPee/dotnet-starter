@@ -44,6 +44,5 @@ jobs:
       - name: Build
         run: dotnet build tests/Starter.IntegrationTests --configuration Release --no-restore
 
-      # Testcontainers uses the runner's Docker daemon.
       - name: Integration tests
         run: dotnet test tests/Starter.IntegrationTests --configuration Release --no-build

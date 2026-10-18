@@ -67,7 +67,6 @@ public sealed class TypePlacementTests
             .AssertRule($"*{UseCaseSuffix} types must be sealed classes");
     }
 
-    // Guards the suffix-based rules above against passing vacuously after a rename.
     [Fact]
     public void UseCaseTypes_Exist()
     {

@@ -3,7 +3,7 @@ using NetArchTest.Rules;
 
 namespace Starter.ArchitectureTests;
 
-// Top-level statements compile to a `Program` class in the global namespace; matching by name alone would also exempt any namespaced `Program`.
+// Also checks the global namespace so a namespaced `Program` is not exempted.
 internal sealed class ExcludeTopLevelProgramRule : ICustomRule
 {
     private const string TopLevelProgramTypeName = "Program";

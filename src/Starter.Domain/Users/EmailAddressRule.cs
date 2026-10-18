@@ -1,6 +1,5 @@
 namespace Starter.Domain.Users;
 
-// ASCII-only like the HTML email input: internationalized addresses are rare and poorly supported by mail providers.
 public static class EmailAddressRule
 {
     public const string Requirement = "must be a valid ASCII email address such as name@example.com";
@@ -9,7 +8,6 @@ public static class EmailAddressRule
     private const char DotSeparator = '.';
     private const char Hyphen = '-';
     private const int MinimumDomainLabelCount = 2;
-    // RFC 5322 "atext" symbols allowed in the local part besides ASCII letters and digits.
     private const string LocalPartSymbols = "!#$%&'*+/=?^_`{|}~-";
 
     public static string Normalize(string email) => email.Trim().ToLowerInvariant();

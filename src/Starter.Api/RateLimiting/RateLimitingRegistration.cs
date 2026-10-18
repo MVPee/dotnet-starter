@@ -22,7 +22,6 @@ internal static class RateLimitingRegistration
         return services;
     }
 
-    // Partitioned by client IP while there is no authentication; switch to the user id once auth exists.
     private static RateLimitPartition<string> SlidingWindowPerClient(HttpContext httpContext, SlidingWindowPolicyOptions policyOptions)
         => RateLimitPartition.GetSlidingWindowLimiter(
             ClientPartitionKey.For(httpContext.Connection.RemoteIpAddress),

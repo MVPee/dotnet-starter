@@ -6,7 +6,6 @@ using Starter.Infrastructure.Persistence.Users;
 
 namespace Starter.Infrastructure.Persistence;
 
-// Translates unique-index violations (concurrent duplicates that slipped past use-case checks) into domain errors.
 internal static class UniqueConstraintErrors
 {
     private static readonly FrozenDictionary<string, Error> ErrorsByConstraintName = new Dictionary<string, Error>

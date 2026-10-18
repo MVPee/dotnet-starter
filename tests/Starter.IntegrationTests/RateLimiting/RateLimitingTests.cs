@@ -12,7 +12,6 @@ namespace Starter.IntegrationTests.RateLimiting;
 public sealed class RateLimitingTests(ApiFactory factory)
 {
     private const string ProblemJsonMediaType = "application/problem+json";
-    // Wire value asserted as a literal on purpose: it is the public HTTP contract.
     private const string RateLimitExceededCode = "rate_limit.exceeded";
     private const string FirstName = "Ada";
     private const string LastName = "Lovelace";
@@ -21,7 +20,7 @@ public sealed class RateLimitingTests(ApiFactory factory)
     private const int HighPermitLimit = 1000;
     private const int HealthProbeCount = 5;
 
-    // Matches the one-minute window in appsettings.json: only a full window guarantees permits are back.
+    // Must match the window in appsettings.json.
     private static readonly TimeSpan ExpectedRetryAfter = TimeSpan.FromMinutes(1);
 
     private static readonly Uri HealthPath = new("/health", UriKind.Relative);

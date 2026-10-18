@@ -3,7 +3,6 @@ using Starter.Application.Common.Persistence;
 
 namespace Starter.ArchitectureTests;
 
-// Critical rule: only use cases write, by staging through repositories and saving once through IUnitOfWork.
 public sealed class UnitOfWorkRulesTests
 {
     private const string UseCaseSuffix = "UseCase";
@@ -14,7 +13,6 @@ public sealed class UnitOfWorkRulesTests
     private static readonly string UnitOfWorkInterfaceFullName = typeof(IUnitOfWork).FullName!;
     private static readonly Type GenericRepositoryInterface = typeof(IRepository<,>);
 
-    // EF Core members that write or open a transaction outside the unit of work's single SaveChanges.
     private static readonly string[] WritingMemberPrefixes =
         [SaveChangesPrefix, "ExecuteUpdate", "ExecuteDelete", "ExecuteSql", "BeginTransaction", "GetDbConnection"];
 
@@ -50,7 +48,6 @@ public sealed class UnitOfWorkRulesTests
                 && methodCall.CalleeName.StartsWith(SaveChangesPrefix, StringComparison.Ordinal))
             .ToList();
 
-        // Guards against a vacuous pass if the IL inspection stops recognising the call.
         Assert.NotEmpty(saveChangesCalls);
         saveChangesCalls
             .GroupBy(methodCall => methodCall.CallerTypeFullName)
@@ -62,7 +59,6 @@ public sealed class UnitOfWorkRulesTests
     [Fact]
     public void Infrastructure_OnlyUnitOfWorkWritesThroughEfCore()
     {
-        // Matched by name: inside Infrastructure these members only exist on EF Core types (DbContext, DatabaseFacade, query extensions).
         var writingCalls = MethodCallInspector.CallsIn(AssemblyReferences.Infrastructure)
             .Where(methodCall => WritingMemberPrefixes.Any(writingMemberPrefix => methodCall.CalleeName.StartsWith(writingMemberPrefix, StringComparison.Ordinal)))
             .ToList();
@@ -72,7 +68,6 @@ public sealed class UnitOfWorkRulesTests
             .Distinct()
             .ToList();
 
-        // Guards against a vacuous pass if the IL inspection stops recognising the call.
         Assert.Contains(writingCalls, methodCall => methodCall.CallerTypeFullName == UnitOfWorkTypeFullName);
         Assert.True(offendingCallers.Count == 0,
             $"Only {UnitOfWorkTypeFullName} may write through EF Core. Offending calls: {string.Join(", ", offendingCallers)}");

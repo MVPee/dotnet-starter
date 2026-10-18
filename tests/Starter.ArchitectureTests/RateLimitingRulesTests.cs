@@ -7,7 +7,6 @@ using Starter.Api.RateLimiting;
 
 namespace Starter.ArchitectureTests;
 
-// Every action states its policy explicitly, so a forgotten attribute fails here instead of shipping an unlimited endpoint.
 public sealed class RateLimitingRulesTests
 {
     private const BindingFlags PublicInstanceMethods = BindingFlags.Public | BindingFlags.Instance;
@@ -65,7 +64,6 @@ public sealed class RateLimitingRulesTests
     private static string ExpectedPolicy(MethodInfo action)
         => HttpMethodsOf(action).Any(WritingHttpMethods.Contains) ? RateLimitPolicies.Write : RateLimitPolicies.Read;
 
-    // IActionHttpMethodProvider covers [HttpGet]-style attributes and [AcceptVerbs].
     private static List<string> HttpMethodsOf(MethodInfo action)
         => [.. action.GetCustomAttributes().OfType<IActionHttpMethodProvider>().SelectMany(methodProvider => methodProvider.HttpMethods)];
 

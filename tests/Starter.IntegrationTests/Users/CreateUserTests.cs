@@ -17,7 +17,6 @@ public sealed class CreateUserTests(ApiFactory factory) : IDisposable
     private const string EmailField = "email";
     private const string FirstNameField = "firstName";
     private const string LastNameField = "lastName";
-    // Wire values asserted as literals on purpose: they are the public HTTP contract.
     private const string EmailAlreadyUsedCode = "user.email_already_used";
     private const char NameFillCharacter = 'a';
     private const int ConcurrentRequestCount = 10;

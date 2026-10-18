@@ -8,7 +8,7 @@ using Starter.IntegrationTests.Fixtures;
 
 namespace Starter.IntegrationTests.RateLimiting;
 
-// TestServer has no network peer, so a startup filter plays the TCP peer that Traefik (or an attacker) would be.
+// TestServer has no network peer, so a startup filter simulates the TCP peer.
 [Collection(ApiCollectionDefinition.Name)]
 public sealed class ClientIpRateLimitingTests(ApiFactory factory)
 {

@@ -8,7 +8,6 @@ public static class PersonNameRule
     public const string Requirement = "must start with a letter and may only contain letters, spaces, hyphens, apostrophes and periods";
 
     private const char TypographicApostrophe = '’';
-    // Real names stack two or three accents at most (Vietnamese); more is "Zalgo" text.
     private const int MaxConsecutiveCombiningMarks = 4;
     private const int FirstVariationSelector = 0xFE00;
     private const int LastVariationSelector = 0xFE0F;
@@ -32,7 +31,6 @@ public static class PersonNameRule
         UnicodeCategory.SpacingCombiningMark,
     ];
 
-    // Classified as letters or marks by Unicode yet render as nothing: Hangul fillers, grapheme joiner, Khmer inherent vowels.
     private static readonly HashSet<int> InvisibleCodePoints = [0x115F, 0x1160, 0x3164, 0xFFA0, 0x034F, 0x17B4, 0x17B5];
 
     public static string Normalize(string name) => name.Trim().Normalize(NormalizationForm.FormC);

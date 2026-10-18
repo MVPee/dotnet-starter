@@ -10,7 +10,6 @@ updates:
       # EF Core, its Npgsql provider and the dotnet-ef tool must move in lockstep (first matching group wins).
       ef-core:
         patterns: ["Microsoft.EntityFrameworkCore*", "Npgsql.EntityFrameworkCore*", "dotnet-ef"]
-      # Framework packages ship together; one PR per .NET servicing release.
       microsoft:
         patterns: ["Microsoft.*", "System.*"]
       tests:

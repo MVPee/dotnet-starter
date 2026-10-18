@@ -11,7 +11,7 @@ public sealed class GetUserByIdTests(ApiFactory factory) : IDisposable
     private const string LastName = "Smith";
     private const string NotFoundCode = "user.not_found";
 
-    // Postgres keeps microseconds while .NET has 100ns ticks; sub-second drift is irrelevant to clients.
+    // Postgres truncates .NET's 100ns ticks to microseconds.
     private static readonly TimeSpan CreatedAtPrecision = TimeSpan.FromSeconds(1);
 
     private readonly HttpClient _client = factory.CreateClient();
