@@ -77,7 +77,7 @@ dotnet ef migrations has-pending-model-changes \
 
 CI is split in `.github/workflows/` (lint, test, migrations, docker) sharing `.github/actions/setup-dotnet`. The SDK version lives in `global.json` and the Dockerfile `sdk:` tag: change both together.
 
-Config: `ConnectionStrings__Database`, `Database__ApplyMigrationsOnStartup` (true only in Development), `ForwardedHeaders:TrustedNetworks` (reverse proxy subnet, required outside Development), `RateLimiting:{Read,Write}` (sliding window per client IP, IPv6 keyed by /64, validated at startup; switch `ClientPartitionKey` to the user id once auth exists). Health: `GET /health`. Scalar UI at `/scalar` outside Production.
+Config: `AllowedHosts` (public host names; `*` or empty fails startup outside Development), `ConnectionStrings__Database`, `Database__ApplyMigrationsOnStartup` (true only in Development), `ForwardedHeaders:TrustedNetworks` (reverse proxy subnet, required outside Development), `RateLimiting:{Read,Write}` (sliding window per client IP, IPv6 keyed by /64, validated at startup; switch `ClientPartitionKey` to the user id once auth exists). Health: `GET /health` (also checks the database; deliberately not split into live/ready). Scalar UI at `/scalar` outside Production.
 
 Package versions live in `Directory.Packages.props` (central package management): add `<PackageVersion>` there, and `<PackageReference>` without a version in the csproj.
 

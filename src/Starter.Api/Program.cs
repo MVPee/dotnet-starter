@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Scalar.AspNetCore;
 using Serilog;
 using Starter.Api.Errors;
+using Starter.Api.Hosting;
 using Starter.Api.Networking;
 using Starter.Api.RateLimiting;
 using Starter.Application;
@@ -13,7 +14,10 @@ const string HealthEndpoint = "/health";
 const string ClientIpProperty = "ClientIp";
 const string RequestLogTemplate = "HTTP {RequestMethod} {RequestPath} from {ClientIp} responded {StatusCode} in {Elapsed:0.0000} ms";
 
+InitProcessCrashExit.Register();
+
 var builder = WebApplication.CreateBuilder(args);
+AllowedHostsGuard.EnsureRestrictedOutsideDevelopment(builder.Configuration, builder.Environment);
 
 builder.Services.AddSerilog((services, loggerConfiguration) => loggerConfiguration
     .ReadFrom.Configuration(builder.Configuration)

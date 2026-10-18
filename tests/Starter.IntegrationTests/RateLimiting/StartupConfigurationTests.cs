@@ -1,3 +1,4 @@
+using System.Net;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Starter.IntegrationTests.Fixtures;
@@ -12,15 +13,57 @@ public sealed class StartupConfigurationTests(ApiFactory factory)
     private const string ZeroSegments = "0";
     private const string WindowWrittenAsBareNumber = "60";
     private const string RateLimitingSectionName = "RateLimiting";
+    private const string AnyHost = "*";
+    private const string PublicHost = "api.example.com";
+    private const string UnknownHost = "evil.example";
+    private const string PublicHostThenAnyHost = "api.example.com; * ";
+
+    private static readonly Uri HealthPath = new("/health", UriKind.Relative);
 
     [Fact]
     public void Startup_OutsideDevelopmentWithoutTrustedNetworks_Fails()
     {
         using var misconfiguredFactory = factory.WithWebHostBuilder(builder => builder
             .UseEnvironment(Environments.Production)
+            .UseSetting(ApiSettingKeys.AllowedHosts, PublicHost)
             .UseSetting(ApiSettingKeys.FirstTrustedNetwork, NoValue));
 
         AssertStartupFailsMentioning(misconfiguredFactory, ApiSettingKeys.TrustedNetworks);
+    }
+
+    [Theory]
+    [InlineData(AnyHost)]
+    [InlineData(NoValue)]
+    [InlineData(PublicHostThenAnyHost)]
+    public void Startup_OutsideDevelopmentWithUnrestrictedHosts_Fails(string allowedHosts)
+    {
+        using var misconfiguredFactory = factory.WithWebHostBuilder(builder => builder
+            .UseEnvironment(Environments.Production)
+            .UseSetting(ApiSettingKeys.AllowedHosts, allowedHosts));
+
+        AssertStartupFailsMentioning(misconfiguredFactory, ApiSettingKeys.AllowedHosts);
+    }
+
+    [Fact]
+    public async Task Production_WithRestrictedHosts_ServesKnownHostAndRejectsOthers()
+    {
+        await using var productionFactory = factory.WithWebHostBuilder(builder => builder
+            .UseEnvironment(Environments.Production)
+            .UseSetting(ApiSettingKeys.AllowedHosts, PublicHost));
+        using var client = productionFactory.CreateClient();
+
+        using var knownHostResponse = await GetHealthAsync(client, PublicHost);
+        using var unknownHostResponse = await GetHealthAsync(client, UnknownHost);
+
+        Assert.Equal(HttpStatusCode.OK, knownHostResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, unknownHostResponse.StatusCode);
+    }
+
+    private static Task<HttpResponseMessage> GetHealthAsync(HttpClient client, string host)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, HealthPath);
+        request.Headers.Host = host;
+        return client.SendAsync(request);
     }
 
     [Fact]

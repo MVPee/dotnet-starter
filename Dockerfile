@@ -26,13 +26,15 @@ RUN dotnet publish src/Starter.Api/Starter.Api.csproj \
 
 FROM build AS migrations-build
 ARG TARGETARCH
+# Generating the bundle never connects; this only satisfies the design-time factory, which refuses to guess inside a container.
+ARG BUNDLE_BUILD_CONNECTION_PLACEHOLDER="Host=bundle-build-placeholder"
 RUN case "$TARGETARCH" in \
         amd64) runtime=linux-x64 ;; \
         arm64) runtime=linux-arm64 ;; \
         *) echo "Unsupported TARGETARCH: $TARGETARCH" >&2; exit 1 ;; \
     esac \
     && dotnet restore src/Starter.Infrastructure --runtime "$runtime" \
-    && dotnet ef migrations bundle \
+    && ConnectionStrings__Database="$BUNDLE_BUILD_CONNECTION_PLACEHOLDER" dotnet ef migrations bundle \
         --project src/Starter.Infrastructure \
         --startup-project src/Starter.Infrastructure \
         --configuration Release \
@@ -40,14 +42,14 @@ RUN case "$TARGETARCH" in \
         --runtime "$runtime" \
         --output /app/efbundle
 
-# Not chiseled: the entrypoint needs a shell to expand the connection string from the environment.
-FROM mcr.microsoft.com/dotnet/runtime-deps:10.0 AS migrations
+# No --connection argument: the bundle reads ConnectionStrings__Database itself, so the password never appears in the process list.
+FROM mcr.microsoft.com/dotnet/runtime-deps:10.0-noble-chiseled-extra AS migrations
 WORKDIR /app
 COPY --from=migrations-build /app/efbundle ./efbundle
 USER $APP_UID
-ENTRYPOINT ["/bin/sh", "-c", "exec ./efbundle --connection \"${ConnectionStrings__Database:?ConnectionStrings__Database is required}\""]
+ENTRYPOINT ["./efbundle"]
 
-# chiseled-extra ships ICU + tzdata (needed by Npgsql/culture-aware code) with no shell or package manager.
+# chiseled-extra adds ICU and tzdata for culture- and time-zone-aware code, still with no shell or package manager.
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra AS runtime
 WORKDIR /app
 ENV ASPNETCORE_HTTP_PORTS=8080

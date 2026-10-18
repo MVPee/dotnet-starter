@@ -79,7 +79,7 @@ Un seul `Dockerfile` pour staging et production ; seules les variables d'environ
 | Application Dokploy | Build type | Docker target | Rôle |
 |---|---|---|---|
 | API | Dockerfile | `runtime` (défaut) | Sert l'API sur le port `8080` |
-| Migrations | Dockerfile | `migrations` | Job ponctuel avant chaque déploiement de l'API ; applique les migrations puis s'arrête |
+| Migrations | Dockerfile | `migrations` | Job ponctuel avant chaque déploiement de l'API ; applique les migrations puis s'arrête. Lit `ConnectionStrings__Database` depuis l'environnement (jamais en argument, donc invisible dans `ps`) et échoue avec un message clair si elle manque |
 
 Variables d'environnement :
 
@@ -88,11 +88,15 @@ Variables d'environnement :
 | `ConnectionStrings__Database` | ✔ | ✔ |
 | `ASPNETCORE_ENVIRONMENT` | `Staging` / `Production` | — |
 | `Database__ApplyMigrationsOnStartup` | `false` (défaut hors Development) | — |
+| `AllowedHosts` | **obligatoire** : domaines publics séparés par `;` (ex. `api.example.com`). `*` ou vide fait échouer le démarrage hors Development | — |
 | `ForwardedHeaders__TrustedNetworks__0` | sous-réseau de `dokploy-network` (défaut `10.0.1.0/24`, à changer si ton réseau diffère) | — |
 | `RateLimiting__Read__PermitLimit` / `RateLimiting__Write__PermitLimit` | optionnel (défauts : 100 et 10 requêtes par minute et par IP) | — |
 
 - Port du conteneur : `8080` (Traefik termine le TLS devant).
+- Si l'API plante au démarrage (configuration invalide, ou base injoignable quand les migrations au démarrage sont activées), le conteneur s'arrête avec le code `1` et l'erreur dans les logs, au lieu de rester bloqué : .NET tourne en PID 1 dans le conteneur et ne s'arrêterait pas tout seul. Un plantage après le démarrage peut mettre jusqu'à 30 s à arrêter le conteneur (délai d'arrêt de l'hôte).
 - Health check : `GET /health`. L'image runtime est *chiseled* (pas de shell ni de `curl`), donc pas de `HEALTHCHECK` Docker : configurer la sonde HTTP côté Dokploy/Traefik.
+- `/health` vérifie aussi la connexion à Postgres : si la base tombe, il renvoie `503`. Si la sonde redémarre le conteneur à chaque échec, une panne de base provoque des redémarrages en boucle de l'API ; préférer une sonde qui retire le conteneur du trafic sans le redémarrer.
+- La sonde doit envoyer un `Host` présent dans `AllowedHosts`, sinon elle reçoit `400`. Si elle appelle le conteneur directement (par IP ou `localhost`), ajouter cette valeur à `AllowedHosts`.
 - OpenAPI + Scalar sont exposés hors Production uniquement (donc aussi sur un staging public).
 - **IP des clients** : l'API ne lit `X-Forwarded-For` que si la requête vient de `ForwardedHeaders:TrustedNetworks` (Traefik sur `dokploy-network`). Hors Development, l'app refuse de démarrer si cette liste est vide. Trouver le sous-réseau : `docker network inspect dokploy-network --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}'`.
 - **Vérifier après le premier déploiement** que l'IP réelle arrive bien : faire une requête depuis un téléphone en 4G et comparer le `from <ip>` des logs de requête avec l'IP publique du téléphone (IPv4 et IPv6). Si toutes les requêtes affichent la même IP interne, le rate limiting bloquerait tout le monde ensemble.

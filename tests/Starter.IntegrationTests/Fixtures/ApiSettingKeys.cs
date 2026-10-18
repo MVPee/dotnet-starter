@@ -8,4 +8,5 @@ internal static class ApiSettingKeys
     public const string ReadWindow = "RateLimiting:Read:Window";
     public const string TrustedNetworks = "ForwardedHeaders:TrustedNetworks";
     public const string FirstTrustedNetwork = "ForwardedHeaders:TrustedNetworks:0";
+    public const string AllowedHosts = "AllowedHosts";
 }
