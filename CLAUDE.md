@@ -75,7 +75,7 @@ dotnet ef migrations has-pending-model-changes \
   --project src/Starter.Infrastructure --startup-project src/Starter.Infrastructure
 ```
 
-CI is split in `.github/workflows/` (lint, test, migrations, docker) sharing `.github/actions/setup-dotnet`. The SDK version lives in `global.json` and the Dockerfile `sdk:` tag: change both together.
+CI is split in `.github/workflows/` (lint, test, migrations, docker, security) sharing `.github/actions/setup-dotnet`. `security.yml` runs `.github/scripts/check-vulnerable-packages.sh` on PRs, main and weekly: Low/Moderate NuGet advisories warn, anything higher or unknown fails, and an audit that could not run fails (NU190x stay non-fatal in the build on purpose). The SDK version lives in `global.json` and the Dockerfile `sdk:` tag: change both together.
 
 Config: `AllowedHosts` (public host names; `*` or empty fails startup outside Development), `ConnectionStrings__Database`, `Database__ApplyMigrationsOnStartup` (true only in Development), `ForwardedHeaders:TrustedNetworks` (reverse proxy subnet, required outside Development), `RateLimiting:{Read,Write}` (sliding window per client IP, IPv6 keyed by /64, validated at startup; switch `ClientPartitionKey` to the user id once auth exists). Health: `GET /health` (also checks the database; deliberately not split into live/ready). Scalar UI at `/scalar` outside Production.
 

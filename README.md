@@ -121,7 +121,10 @@ Déclenchée sur chaque pull request et sur les push vers `main`. Le setup .NET 
 | `test.yml` | unit + architecture, et intégration (Testcontainers) en parallèle | non |
 | `migrations.yml` | aucune migration oubliée (`dotnet ef migrations has-pending-model-changes`) | `src/` (hors Api), props, `global.json`, outils, action de setup |
 | `docker.yml` | build des images `runtime` et `migrations` (sans push) | `src/`, Dockerfile, props, `.editorconfig` |
+| `security.yml` | paquets NuGet vulnérables, directs et transitifs : simple avertissement pour Low/Moderate, échec pour toute sévérité plus haute (ou inconnue) et si l'audit n'a pas pu tourner (source NuGet injoignable). Tourne aussi chaque lundi pour attraper les CVE publiées après un merge ; GitHub n'envoie l'email d'échec du run planifié qu'à la personne qui a modifié le cron en dernier | non |
 
-Checks à rendre obligatoires dans la protection de branche : `Lint` et `Test` uniquement. Les workflows filtrés par chemin ne tournent pas sur toutes les PR ; obligatoires, ils bloqueraient celles qui ne les déclenchent pas.
+Checks à rendre obligatoires dans la protection de branche : `Lint`, `Test` et `Security`. Les workflows filtrés par chemin ne tournent pas sur toutes les PR ; obligatoires, ils bloqueraient celles qui ne les déclenchent pas.
 
 Dependabot (`.github/dependabot.yml`) ouvre chaque semaine des PR groupées pour NuGet, les GitHub Actions et les images Docker. L'image SDK est exclue : elle se met à jour à la main, en même temps que `global.json`.
+
+Vérifier les vulnérabilités en local : `.github/scripts/check-vulnerable-packages.sh`.
