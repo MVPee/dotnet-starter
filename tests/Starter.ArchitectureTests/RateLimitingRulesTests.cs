@@ -30,6 +30,18 @@ public sealed class RateLimitingRulesTests
     }
 
     [Fact]
+    public void Actions_DeclareAnHttpMethod()
+    {
+        var actionsWithoutHttpMethod = ControllerActions()
+            .Where(controllerAction => HttpMethodsOf(controllerAction.Action).Count == 0)
+            .Select(controllerAction => $"{controllerAction.ControllerName}.{controllerAction.Action.Name}")
+            .ToList();
+
+        Assert.True(actionsWithoutHttpMethod.Count == 0,
+            $"An action without an HTTP method attribute answers every verb, so its rate limit policy is ambiguous. Offending: {string.Join(", ", actionsWithoutHttpMethod)}");
+    }
+
+    [Fact]
     public void Actions_NeverMixReadAndWriteVerbs()
     {
         var mixedVerbActions = ControllerActions()
@@ -71,8 +83,8 @@ public sealed class RateLimitingRulesTests
         => [.. ControllerTypes().SelectMany(controllerType => controllerType.GetMethods(PublicInstanceMethods)
             .Where(method => method.DeclaringType != typeof(ControllerBase)
                 && method.DeclaringType != typeof(object)
-                && method.GetCustomAttribute<NonActionAttribute>() is null
-                && HttpMethodsOf(method).Count > 0)
+                && !method.IsSpecialName
+                && method.GetCustomAttribute<NonActionAttribute>() is null)
             .Select(action => (controllerType.Name, action)))];
 
     private static List<Type> ControllerTypes()
