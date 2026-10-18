@@ -16,6 +16,7 @@ public sealed class ClientIpRateLimitingTests(ApiFactory factory)
     private const string ForwardedForHeader = "X-Forwarded-For";
     private const string UsersPath = "/api/users";
     private const string SinglePermit = "1";
+    private const string TraefikNetwork = "10.0.1.0/24";
     private const string TraefikPeer = "10.0.1.5";
     private const string UntrustedPeer = "198.51.100.7";
     private const string FirstClient = "203.0.113.9";
@@ -85,6 +86,7 @@ public sealed class ClientIpRateLimitingTests(ApiFactory factory)
     private WebApplicationFactory<Program> WithSimulatedPeers()
         => factory.WithWebHostBuilder(builder => builder
             .UseSetting(ApiSettingKeys.ReadPermitLimit, SinglePermit)
+            .UseSetting(ApiSettingKeys.FirstTrustedNetwork, TraefikNetwork)
             .ConfigureServices(services => services.AddSingleton<IStartupFilter, SimulatedPeerStartupFilter>()));
 
     private static Task<HttpResponseMessage> GetUsersAsync(HttpClient client, string peerIp, string forwardedFor)

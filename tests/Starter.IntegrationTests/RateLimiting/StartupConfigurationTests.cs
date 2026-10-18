@@ -10,6 +10,7 @@ public sealed class StartupConfigurationTests(ApiFactory factory)
 {
     private const string NoValue = "";
     private const string MalformedNetwork = "not-a-cidr";
+    private const string ProxyNetwork = "10.0.1.0/24";
     private const string ZeroSegments = "0";
     private const string WindowWrittenAsBareNumber = "60";
     private const string RateLimitingSectionName = "RateLimiting";
@@ -25,8 +26,7 @@ public sealed class StartupConfigurationTests(ApiFactory factory)
     {
         using var misconfiguredFactory = factory.WithWebHostBuilder(builder => builder
             .UseEnvironment(Environments.Production)
-            .UseSetting(ApiSettingKeys.AllowedHosts, PublicHost)
-            .UseSetting(ApiSettingKeys.FirstTrustedNetwork, NoValue));
+            .UseSetting(ApiSettingKeys.AllowedHosts, PublicHost));
 
         AssertStartupFailsMentioning(misconfiguredFactory, ApiSettingKeys.TrustedNetworks);
     }
@@ -39,7 +39,8 @@ public sealed class StartupConfigurationTests(ApiFactory factory)
     {
         using var misconfiguredFactory = factory.WithWebHostBuilder(builder => builder
             .UseEnvironment(Environments.Production)
-            .UseSetting(ApiSettingKeys.AllowedHosts, allowedHosts));
+            .UseSetting(ApiSettingKeys.AllowedHosts, allowedHosts)
+            .UseSetting(ApiSettingKeys.FirstTrustedNetwork, ProxyNetwork));
 
         AssertStartupFailsMentioning(misconfiguredFactory, ApiSettingKeys.AllowedHosts);
     }
@@ -49,7 +50,8 @@ public sealed class StartupConfigurationTests(ApiFactory factory)
     {
         await using var productionFactory = factory.WithWebHostBuilder(builder => builder
             .UseEnvironment(Environments.Production)
-            .UseSetting(ApiSettingKeys.AllowedHosts, PublicHost));
+            .UseSetting(ApiSettingKeys.AllowedHosts, PublicHost)
+            .UseSetting(ApiSettingKeys.FirstTrustedNetwork, ProxyNetwork));
         using var client = productionFactory.CreateClient();
 
         using var knownHostResponse = await GetHealthAsync(client, PublicHost);

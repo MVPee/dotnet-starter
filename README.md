@@ -89,7 +89,7 @@ Variables d'environnement :
 | `ASPNETCORE_ENVIRONMENT` | `Staging` / `Production` | — |
 | `Database__ApplyMigrationsOnStartup` | `false` (défaut hors Development) | — |
 | `AllowedHosts` | **obligatoire** : domaines publics séparés par `;` (ex. `api.example.com`). `*` ou vide fait échouer le démarrage hors Development | — |
-| `ForwardedHeaders__TrustedNetworks__0` | sous-réseau de `dokploy-network` (défaut `10.0.1.0/24`, à changer si ton réseau diffère) | — |
+| `ForwardedHeaders__TrustedNetworks__0` | **obligatoire** : sous-réseau de `dokploy-network` (ex. `10.0.1.0/24`). Absent ou vide fait échouer le démarrage hors Development | — |
 | `RateLimiting__Read__PermitLimit` / `RateLimiting__Write__PermitLimit` | optionnel (défauts : 100 et 10 requêtes par minute et par IP) | — |
 
 - Port du conteneur : `8080` (Traefik termine le TLS devant).
