@@ -23,7 +23,11 @@ Vocabulary: the Clean Architecture "Entity" is the Domain model (`User`). `UserE
 - Implementations inherit `Repository<TModel, TEntity, TFilter>` and only override `ApplyFilter`, `ToModel`, `ToEntity`. `<Concept>Entity` implements `IPersistenceEntity`.
 - Repositories only **stage** changes. The use case calls `IUnitOfWork.SaveChangesAsync` once at the end: one `SaveChanges` = one transaction, all or nothing.
 - Unique-index violations are mapped to domain errors in `Persistence/UniqueConstraintErrors.cs`; add an entry for each new unique index.
-- `RepositoryRulesTests` enforces all of this.
+- Only use cases write: Api never injects `IUnitOfWork` or a repository.
+- What fails the tests (and so CI):
+  - `RepositoryRulesTests`: repositories inherit `Repository<,,>`, are sealed, only override `ApplyFilter`/`ToModel`/`ToEntity`, `I<Concept>Repository` declares nothing, only repositories and `UnitOfWork` take `AppDbContext`.
+  - `UnitOfWorkRulesTests`: Api depends on neither `IUnitOfWork` nor a repository; in Application only `*UseCase` types depend on `IUnitOfWork`; a use case has at most one `SaveChangesAsync` call site; in Infrastructure only `UnitOfWork` calls EF Core writing members (`SaveChanges*`, `ExecuteUpdate/Delete`, `ExecuteSql*`, `BeginTransaction`, `GetDbConnection`), checked on compiled IL including delegates.
+  - `UniqueConstraintMappingTests` (integration): every unique index and alternate key in the EF model has an entry in `UniqueConstraintErrors`.
 
 ## Conventions
 

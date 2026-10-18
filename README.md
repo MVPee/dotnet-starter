@@ -28,7 +28,13 @@ Ces règles sont vérifiées par `tests/Starter.ArchitectureTests`.
 
 Règle critique, sans exception : chaque repository expose uniquement le CRUD réutilisable de `IRepository<TModel, TFilter>` (`GetByIdAsync`, `GetAllAsync(filter)` paginé, `GetCountAsync(filter)`, `AddBatchAsync`, `UpdateBatchAsync`, `DeleteBatchAsync`). Les implémentations héritent de `Repository<TModel, TEntity, TFilter>` et ne fournissent que `ApplyFilter`, `ToModel` et `ToEntity`.
 
-Les repositories ne font que préparer les changements ; le use case appelle `IUnitOfWork.SaveChangesAsync` une seule fois à la fin (une transaction : tout passe ou rien ne passe). `RepositoryRulesTests` fait échouer le build si la règle est violée.
+Les repositories ne font que préparer les changements ; le use case appelle `IUnitOfWork.SaveChangesAsync` une seule fois à la fin (une transaction : tout passe ou rien ne passe). Seuls les use cases écrivent : l'Api n'injecte jamais `IUnitOfWork` ni un repository.
+
+Ces règles sont vérifiées par des tests (et donc par la CI) :
+
+- `RepositoryRulesTests` : forme des repositories (héritage de `Repository<,,>`, `sealed`, seules surcharges autorisées, interfaces `I<Concept>Repository` vides, `AppDbContext` injecté uniquement dans les repositories et `UnitOfWork`).
+- `UnitOfWorkRulesTests` : l'Api ne dépend ni d'`IUnitOfWork` ni d'un repository ; dans Application seuls les `*UseCase` dépendent d'`IUnitOfWork` ; un use case contient au plus un appel à `SaveChangesAsync` ; dans Infrastructure seul `UnitOfWork` utilise les membres EF Core qui écrivent (`SaveChanges*`, `ExecuteUpdate/Delete`, `ExecuteSql*`, `BeginTransaction`, `GetDbConnection`), vérifié sur l'IL compilé, délégués compris.
+- `UniqueConstraintMappingTests` (intégration) : chaque index unique et clé alternative du modèle EF a son entrée dans `UniqueConstraintErrors`.
 
 ## Ajouter un endpoint
 
