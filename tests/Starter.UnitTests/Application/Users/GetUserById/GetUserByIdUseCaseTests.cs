@@ -21,7 +21,7 @@ public sealed class GetUserByIdUseCaseTests
     [Fact]
     public async Task ExecuteAsync_WithExistingId_ReturnsUser()
     {
-        var existingUser = User.Create(Email, FirstName, LastName, TestClock.FixedNow);
+        var existingUser = User.Create(Email, FirstName, LastName, TestClock.FixedNow).Value;
         _userRepository.Seed(existingUser);
 
         var result = await _useCase.ExecuteAsync(existingUser.Id, CancellationToken.None);

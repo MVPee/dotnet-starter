@@ -14,6 +14,7 @@ public sealed class CreateUserUseCaseTests
     private const string LastName = "Doe";
     private const string OtherFirstName = "Janet";
     private const string OtherLastName = "Smith";
+    private const string EmailWithBlankDomain = "x@ ";
 
     private readonly InMemoryUserRepository _userRepository = new();
     private readonly FakeUnitOfWork _unitOfWork;
@@ -35,6 +36,16 @@ public sealed class CreateUserUseCaseTests
         Assert.Equal(FirstName, result.Value.FirstName);
         Assert.Equal(LastName, result.Value.LastName);
         Assert.Equal(TestClock.FixedNow, result.Value.CreatedAt);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithInvalidEmail_ReturnsValidationErrorWithoutSaving()
+    {
+        var result = await _useCase.ExecuteAsync(new CreateUserCommand(EmailWithBlankDomain, FirstName, LastName), CancellationToken.None);
+
+        Assert.Equal(UserErrors.InvalidEmail, result.Error);
+        Assert.Empty(_userRepository.Users);
+        Assert.Equal(0, _unitOfWork.SaveChangesCallCount);
     }
 
     [Fact]

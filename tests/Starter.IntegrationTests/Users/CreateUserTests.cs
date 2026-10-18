@@ -21,6 +21,8 @@ public sealed class CreateUserTests(ApiFactory factory) : IDisposable
     private const string EmailAlreadyUsedCode = "user.email_already_used";
     private const char NameFillCharacter = 'a';
     private const int ConcurrentRequestCount = 10;
+    private const string AccentedFirstName = "Zoë";
+    private const string HyphenatedLastName = "O'Neil-Müller";
 
     private static readonly string TooLongName = new(NameFillCharacter, UserConstraints.NameMaxLength + 1);
 
@@ -97,6 +99,37 @@ public sealed class CreateUserTests(ApiFactory factory) : IDisposable
         Assert.All(
             statusCodes.Where(statusCode => statusCode != HttpStatusCode.Created),
             statusCode => Assert.Equal(HttpStatusCode.Conflict, statusCode));
+    }
+
+    [Theory]
+    [InlineData("x@ ")]
+    [InlineData(" @x.com")]
+    [InlineData("jane@localhost")]
+    [InlineData("😀@example.com")]
+    public async Task Post_WithEmailInvalidAfterTrimmingOrNonAscii_Returns400WithEmailError(string email)
+    {
+        using var response = await _client.CreateAsync(new CreateUserRequest(email, FirstName, LastName));
+
+        await AssertValidationErrorAsync(response, EmailField);
+    }
+
+    [Theory]
+    [InlineData("Jane 😀")]
+    [InlineData("Jane2")]
+    [InlineData("Jane\u200BDoe")]
+    public async Task Post_WithFirstNameContainingNonNameCharacters_Returns400WithFirstNameError(string firstName)
+    {
+        using var response = await _client.CreateAsync(new CreateUserRequest(TestEmails.Unique(), firstName, LastName));
+
+        await AssertValidationErrorAsync(response, FirstNameField);
+    }
+
+    [Fact]
+    public async Task Post_WithAccentedAndHyphenatedNames_Returns201()
+    {
+        using var response = await _client.CreateAsync(new CreateUserRequest(TestEmails.Unique(), AccentedFirstName, HyphenatedLastName));
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
 
     [Fact]

@@ -27,7 +27,7 @@ public sealed class GetUsersUseCaseTests
     public async Task ExecuteAsync_WithUnnormalizedEmailFilter_ReturnsMatchingUserOnly()
     {
         SeedUsers();
-        _userRepository.Seed(User.Create(TargetEmail, FirstName, LastName, TestClock.FixedNow));
+        _userRepository.Seed(User.Create(TargetEmail, FirstName, LastName, TestClock.FixedNow).Value);
 
         var pagedUsers = await _useCase.ExecuteAsync(new UserFilter { Email = TargetEmailWithNoise }, CancellationToken.None);
 
@@ -51,5 +51,5 @@ public sealed class GetUsersUseCaseTests
 
     private void SeedUsers()
         => _userRepository.Seed([.. Enumerable.Range(0, SeededUserCount)
-            .Select(userIndex => User.Create($"user-{userIndex}@example.com", FirstName, LastName, TestClock.FixedNow))]);
+            .Select(userIndex => User.Create($"user-{userIndex}@example.com", FirstName, LastName, TestClock.FixedNow).Value)]);
 }

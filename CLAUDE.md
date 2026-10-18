@@ -32,6 +32,8 @@ Vocabulary: the Clean Architecture "Entity" is the Domain model (`User`). `UserE
 - **Use case names** use CRUD verbs: `Get<Concept>ByIdUseCase`, `Get<Concepts>UseCase` (paged list), `Create<Concept>UseCase`, `Update<Concept>UseCase`, `Delete<Concept>UseCase`. Never `List...`.
 - **Interfaces only for ports**: abstractions Application needs from the outside world (repositories, clocks via `TimeProvider`, external services). Defined in Application, implemented in Infrastructure.
 - **Business failures return `Result<T>` / `Error`** (declared in `<Concept>Errors`), never exceptions. Exceptions are for bugs and infrastructure failures; the Api's global handler turns them into 500 ProblemDetails.
+- **Every input is validated twice, from one rule.** The rule lives once in Domain as a pure function (`<Concept>/<Thing>Rule.IsValid`, e.g. `EmailAddressRule`, `PersonNameRule`). The Api DTO applies it through a custom attribute in `Api/Validation` (all field errors at once, 400 `ValidationProblemDetails`); the Domain factory (`User.Create`) applies it again and returns `Result<T>` with a `<Concept>Errors` validation error for non-HTTP callers. Lengths use the shared `<Concept>Constraints` constants on both sides. Never write a rule twice.
+- **Character policy**: emails are ASCII-only; person names accept letters from any script plus space, hyphen, apostrophe and period, and are stored NFC-normalized.
 - **Pure logic goes in Domain, organised by concept** (`Domain/Users/...`). Never create a `Helpers/`, `Utils/` or `Common/Extensions` dump.
 - **Everything in Infrastructure is `internal`** except the DI registration extension.
 - Folders by feature: `Application/Users/CreateUser/`, `Api/Users/`, `Infrastructure/Persistence/Users/`.

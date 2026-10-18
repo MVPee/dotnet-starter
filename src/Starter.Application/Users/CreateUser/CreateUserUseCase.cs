@@ -10,13 +10,19 @@ public sealed class CreateUserUseCase(IUserRepository userRepository, IUnitOfWor
     {
         ArgumentNullException.ThrowIfNull(command);
 
-        var emailFilter = new UserFilter { Email = command.Email };
+        var userResult = User.Create(command.Email, command.FirstName, command.LastName, timeProvider.GetUtcNow());
+        if (userResult.IsFailure)
+        {
+            return userResult.Error;
+        }
+
+        var user = userResult.Value;
+        var emailFilter = new UserFilter { Email = user.Email };
         if (await userRepository.GetCountAsync(emailFilter, cancellationToken) > 0)
         {
             return UserErrors.EmailAlreadyUsed;
         }
 
-        var user = User.Create(command.Email, command.FirstName, command.LastName, timeProvider.GetUtcNow());
         await userRepository.AddBatchAsync([user], cancellationToken);
 
         var saveResult = await unitOfWork.SaveChangesAsync(cancellationToken);

@@ -1,17 +1,18 @@
 using System.ComponentModel.DataAnnotations;
-using Starter.Domain.Users;
+using Starter.Api.Validation;
 
 namespace Starter.Api.Users;
 
 // Plain init properties (not positional, not `required`) so every invalid field is reported under its camelCase name.
+// Lengths are enforced by the Domain rules behind [ValidEmail]/[ValidPersonName], on the trimmed value.
 public sealed record CreateUserDto
 {
-    [Required, EmailAddress, MaxLength(UserConstraints.EmailMaxLength)]
+    [Required, ValidEmail]
     public string Email { get; init; } = string.Empty;
 
-    [Required, MaxLength(UserConstraints.NameMaxLength)]
+    [Required, ValidPersonName]
     public string FirstName { get; init; } = string.Empty;
 
-    [Required, MaxLength(UserConstraints.NameMaxLength)]
+    [Required, ValidPersonName]
     public string LastName { get; init; } = string.Empty;
 }

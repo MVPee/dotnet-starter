@@ -47,8 +47,8 @@ public sealed class UserRepositoryTests(ApiFactory factory)
     {
         var email = TestEmails.Unique();
         var validUser = NewUser();
-        var firstDuplicate = User.Create(email, FirstName, LastName, CreatedAt);
-        var secondDuplicate = User.Create(email, FirstName, LastName, CreatedAt);
+        var firstDuplicate = User.Create(email, FirstName, LastName, CreatedAt).Value;
+        var secondDuplicate = User.Create(email, FirstName, LastName, CreatedAt).Value;
 
         var saveResult = await StageAndSaveAsync((repository, cancellationToken) =>
             repository.AddBatchAsync([validUser, firstDuplicate, secondDuplicate], cancellationToken));
@@ -67,7 +67,7 @@ public sealed class UserRepositoryTests(ApiFactory factory)
         await using var scope = factory.Services.CreateAsyncScope();
         var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
         await Repository(scope).AddBatchAsync(
-            [User.Create(email, FirstName, LastName, CreatedAt), User.Create(email, FirstName, LastName, CreatedAt)],
+            [User.Create(email, FirstName, LastName, CreatedAt).Value, User.Create(email, FirstName, LastName, CreatedAt).Value],
             CancellationToken.None);
         var failedSave = await unitOfWork.SaveChangesAsync(CancellationToken.None);
 
@@ -147,7 +147,7 @@ public sealed class UserRepositoryTests(ApiFactory factory)
         Assert.Equal(1, matchingCount);
     }
 
-    private static User NewUser() => User.Create(TestEmails.Unique(), FirstName, LastName, CreatedAt);
+    private static User NewUser() => User.Create(TestEmails.Unique(), FirstName, LastName, CreatedAt).Value;
 
     private static IUserRepository Repository(AsyncServiceScope scope) => scope.ServiceProvider.GetRequiredService<IUserRepository>();
 
