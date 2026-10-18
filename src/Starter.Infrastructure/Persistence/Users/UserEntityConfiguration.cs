@@ -7,43 +7,36 @@ namespace Starter.Infrastructure.Persistence.Users;
 
 internal sealed class UserEntityConfiguration : IEntityTypeConfiguration<UserEntity>
 {
-    private const string TableName = "users";
-    private const string IdColumnName = "id";
-    private const string EmailColumnName = "email";
-    private const string FirstNameColumnName = "first_name";
-    private const string LastNameColumnName = "last_name";
-    private const string CreatedAtColumnName = "created_at";
-    private const string PrimaryKeyName = "pk_users";
     internal const string EmailUniqueIndexName = "ix_users_email";
 
     public void Configure(EntityTypeBuilder<UserEntity> builder)
     {
-        builder.ToTable(TableName);
+        builder.ToTable("users");
 
         builder.HasKey(userEntity => userEntity.Id)
-            .HasName(PrimaryKeyName);
+            .HasName("pk_users");
 
         builder.Property(userEntity => userEntity.Id)
-            .HasColumnName(IdColumnName)
+            .HasColumnName("id")
             .ValueGeneratedNever();
 
         builder.Property(userEntity => userEntity.Email)
-            .HasColumnName(EmailColumnName)
+            .HasColumnName("email")
             .HasMaxLength(UserConstraints.EmailMaxLength)
             .IsRequired();
 
         builder.Property(userEntity => userEntity.FirstName)
-            .HasColumnName(FirstNameColumnName)
+            .HasColumnName("first_name")
             .HasMaxLength(UserConstraints.NameMaxLength)
             .IsRequired();
 
         builder.Property(userEntity => userEntity.LastName)
-            .HasColumnName(LastNameColumnName)
+            .HasColumnName("last_name")
             .HasMaxLength(UserConstraints.NameMaxLength)
             .IsRequired();
 
         builder.Property(userEntity => userEntity.CreatedAt)
-            .HasColumnName(CreatedAtColumnName)
+            .HasColumnName("created_at")
             .Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
 
         builder.HasIndex(userEntity => userEntity.Email)

@@ -43,7 +43,7 @@ Vocabulary: the Clean Architecture "Entity" is the Domain model (`User`). `UserE
 - Folders by feature: `Application/Users/CreateUser/`, `Api/Users/`, `Infrastructure/Persistence/Users/`.
 - Code style is enforced by `.editorconfig` with warnings as errors: file-scoped namespaces, braces always, no `this.`, `_camelCase` private fields, PascalCase constants, System usings first, namespace matches folder.
 - No magic numbers (named constants, e.g. `UserConstraints`), descriptive lambda parameter names, no narrating comments.
-- Exception: route templates stay inline in controller attributes (`[Route("api/users")]`, `[HttpGet("{id:guid}")]`), never extracted to constants.
+- Exceptions, kept inline and never extracted to constants: route templates in controller attributes (`[Route("api/users")]`, `[HttpGet("{id:guid}")]`) and table/column/key names in EF configurations (`ToTable("users")`, `HasColumnName("first_name")`). A name referenced elsewhere stays a constant (e.g. a unique index name mapped in `UniqueConstraintErrors`).
 - Migrations under `Persistence/Migrations` are generated: never hand-edit them except to fix a generated mistake.
 
 ## Adding an endpoint
