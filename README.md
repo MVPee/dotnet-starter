@@ -88,11 +88,16 @@ Variables d'environnement :
 | `ConnectionStrings__Database` | ✔ | ✔ |
 | `ASPNETCORE_ENVIRONMENT` | `Staging` / `Production` | — |
 | `Database__ApplyMigrationsOnStartup` | `false` (défaut hors Development) | — |
+| `ForwardedHeaders__TrustedNetworks__0` | sous-réseau de `dokploy-network` (défaut `10.0.1.0/24`, à changer si ton réseau diffère) | — |
+| `RateLimiting__Read__PermitLimit` / `RateLimiting__Write__PermitLimit` | optionnel (défauts : 100 et 10 requêtes par minute et par IP) | — |
 
 - Port du conteneur : `8080` (Traefik termine le TLS devant).
 - Health check : `GET /health`. L'image runtime est *chiseled* (pas de shell ni de `curl`), donc pas de `HEALTHCHECK` Docker : configurer la sonde HTTP côté Dokploy/Traefik.
 - OpenAPI + Scalar sont exposés hors Production uniquement (donc aussi sur un staging public).
-- Ne jamais publier le port `8080` sur l'hôte : l'API fait confiance aux headers `X-Forwarded-*` de n'importe quelle source, en supposant que seul Traefik peut la joindre.
+- **IP des clients** : l'API ne lit `X-Forwarded-For` que si la requête vient de `ForwardedHeaders:TrustedNetworks` (Traefik sur `dokploy-network`). Hors Development, l'app refuse de démarrer si cette liste est vide. Trouver le sous-réseau : `docker network inspect dokploy-network --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}'`.
+- **Vérifier après le premier déploiement** que l'IP réelle arrive bien : faire une requête depuis un téléphone en 4G et comparer le `from <ip>` des logs de requête avec l'IP publique du téléphone (IPv4 et IPv6). Si toutes les requêtes affichent la même IP interne, le rate limiting bloquerait tout le monde ensemble.
+- **Rate limiting** : par IP (IPv6 regroupé par réseau /64, IPv4 « mappée » ramenée à l'IPv4), fenêtre glissante d'une minute. Les valeurs sont validées au démarrage : `Window` s'écrit `hh:mm:ss` (un nombre seul serait lu comme des jours et fait échouer le démarrage). Chaque action déclare sa politique : `read` (100/min) sur les GET, `write` (10/min) sur les écritures, compteurs séparés ; un test d'architecture échoue si une action en oublie une. `/health` n'est jamais limité. Réponse : `429` ProblemDetails avec `code: "rate_limit.exceeded"` et `Retry-After`. Les compteurs sont en mémoire, donc par instance.
+- Les logs de requête contiennent l'IP du client (donnée personnelle au sens du RGPD) : limiter la durée de conservation des logs.
 - **Pas d'authentification** pour l'instant (choix assumé du starter) : tous les endpoints sont publics, y compris la lecture des emails.
 - Builder les images localement :
 

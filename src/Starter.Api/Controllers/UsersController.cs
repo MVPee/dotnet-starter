@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Starter.Api.Common;
 using Starter.Api.Errors;
+using Starter.Api.RateLimiting;
 using Starter.Api.Users;
 using Starter.Application.Users.CreateUser;
 using Starter.Application.Users.GetUserById;
@@ -17,6 +19,7 @@ public sealed class UsersController(
     GetUsersUseCase getUsersUseCase) : ControllerBase
 {
     [HttpGet]
+    [EnableRateLimiting(RateLimitPolicies.Read)]
     [ProducesResponseType<PagedResponseDto<UserDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetAll([FromQuery] GetUsersQueryDto getUsersQueryDto, CancellationToken cancellationToken)
@@ -26,6 +29,7 @@ public sealed class UsersController(
     }
 
     [HttpPost]
+    [EnableRateLimiting(RateLimitPolicies.Write)]
     [ProducesResponseType<UserDto>(StatusCodes.Status201Created)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
@@ -38,6 +42,7 @@ public sealed class UsersController(
     }
 
     [HttpGet("{id:guid}")]
+    [EnableRateLimiting(RateLimitPolicies.Read)]
     [ProducesResponseType<UserDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)

@@ -1,14 +1,17 @@
 using System.Text.Json;
-using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Scalar.AspNetCore;
 using Serilog;
 using Starter.Api.Errors;
+using Starter.Api.Networking;
+using Starter.Api.RateLimiting;
 using Starter.Application;
 using Starter.Infrastructure;
 
 const string ApplyMigrationsOnStartupKey = "Database:ApplyMigrationsOnStartup";
 const string HealthEndpoint = "/health";
+const string ClientIpProperty = "ClientIp";
+const string RequestLogTemplate = "HTTP {RequestMethod} {RequestPath} from {ClientIp} responded {StatusCode} in {Elapsed:0.0000} ms";
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,13 +28,8 @@ builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddHealthChecks();
 
-builder.Services.Configure<ForwardedHeadersOptions>(options =>
-{
-    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    // The container is only reachable through Traefik, whose address on the Docker network is not fixed.
-    options.KnownIPNetworks.Clear();
-    options.KnownProxies.Clear();
-});
+builder.Services.AddTrustedProxyForwardedHeaders(builder.Configuration, builder.Environment);
+builder.Services.AddClientRateLimiting(builder.Configuration);
 
 if (!builder.Environment.IsProduction())
 {
@@ -44,10 +42,16 @@ builder.Services.AddInfrastructure(builder.Configuration);
 var app = builder.Build();
 
 app.UseForwardedHeaders();
-app.UseSerilogRequestLogging();
+app.UseSerilogRequestLogging(options =>
+{
+    options.MessageTemplate = RequestLogTemplate;
+    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+        diagnosticContext.Set(ClientIpProperty, httpContext.Connection.RemoteIpAddress?.ToString());
+});
 // GlobalExceptionHandler logs with the right level itself; avoid a second Error entry per exception.
-app.UseExceptionHandler(new ExceptionHandlerOptions { SuppressDiagnosticsCallback = exceptionContext => true });
+app.UseExceptionHandler(new ExceptionHandlerOptions { SuppressDiagnosticsCallback = _ => true });
 app.UseStatusCodePages();
+app.UseRateLimiter();
 
 if (!app.Environment.IsProduction())
 {
