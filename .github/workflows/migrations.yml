@@ -1,0 +1,61 @@
+name: Migrations
+
+# Path-filtered: do not mark this workflow as a required check, or PRs that skip it stay pending.
+on:
+  pull_request:
+    paths:
+      - "src/Starter.Domain/**"
+      - "src/Starter.Application/**"
+      - "src/Starter.Infrastructure/**"
+      - "Directory.Build.props"
+      - "Directory.Packages.props"
+      - ".editorconfig"
+      - "global.json"
+      - ".config/dotnet-tools.json"
+      - ".github/actions/setup-dotnet/**"
+      - ".github/workflows/migrations.yml"
+  push:
+    branches: [main]
+    paths:
+      - "src/Starter.Domain/**"
+      - "src/Starter.Application/**"
+      - "src/Starter.Infrastructure/**"
+      - "Directory.Build.props"
+      - "Directory.Packages.props"
+      - ".editorconfig"
+      - "global.json"
+      - ".config/dotnet-tools.json"
+      - ".github/actions/setup-dotnet/**"
+      - ".github/workflows/migrations.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Never cancel main: every merged commit keeps a CI result.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+
+jobs:
+  pending-model-changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-dotnet
+
+      - name: Build
+        run: dotnet build src/Starter.Infrastructure --configuration Release --no-restore
+
+      # Fails when an entity or configuration changed without a matching migration.
+      - name: Check for missing migration
+        run: >-
+          dotnet ef migrations has-pending-model-changes
+          --project src/Starter.Infrastructure
+          --startup-project src/Starter.Infrastructure
+          --configuration Release
+          --no-build

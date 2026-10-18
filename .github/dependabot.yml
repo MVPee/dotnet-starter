@@ -1,0 +1,33 @@
+version: 2
+
+updates:
+  - package-ecosystem: nuget
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # EF Core, its Npgsql provider and the dotnet-ef tool must move in lockstep (first matching group wins).
+      ef-core:
+        patterns: ["Microsoft.EntityFrameworkCore*", "Npgsql.EntityFrameworkCore*", "dotnet-ef"]
+      # Framework packages ship together; one PR per .NET servicing release.
+      microsoft:
+        patterns: ["Microsoft.*", "System.*"]
+      tests:
+        patterns: ["xunit*", "coverlet*", "Testcontainers*", "NetArchTest*"]
+
+  - package-ecosystem: github-actions
+    directories: ["/", "/.github/actions/*"]
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: weekly
+    ignore:
+      # The SDK tag is pinned to global.json; bump both together by hand.
+      - dependency-name: mcr.microsoft.com/dotnet/sdk

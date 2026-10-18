@@ -1,0 +1,49 @@
+name: Test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Never cancel main: every merged commit keeps a CI result.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+
+jobs:
+  unit-and-architecture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-dotnet
+
+      - name: Build
+        run: dotnet build Starter.slnx --configuration Release --no-restore
+
+      - name: Unit tests
+        run: dotnet test tests/Starter.UnitTests --configuration Release --no-build
+
+      - name: Architecture tests
+        run: dotnet test tests/Starter.ArchitectureTests --configuration Release --no-build
+
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-dotnet
+
+      - name: Build
+        run: dotnet build tests/Starter.IntegrationTests --configuration Release --no-restore
+
+      # Testcontainers uses the runner's Docker daemon.
+      - name: Integration tests
+        run: dotnet test tests/Starter.IntegrationTests --configuration Release --no-build

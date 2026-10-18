@@ -1,0 +1,62 @@
+name: starter
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: starter
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d starter"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    image: mcr.microsoft.com/dotnet/sdk:10.0
+    working_dir: /src
+    command: ["dotnet", "watch", "--project", "src/Starter.Api", "--non-interactive", "run", "--no-launch-profile"]
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: "8080"
+      ConnectionStrings__Database: "Host=postgres;Port=5432;Database=starter;Username=postgres;Password=postgres"
+      # Bind mounts from macOS don't propagate inotify events into the container.
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
+      DOTNET_WATCH_RESTART_ON_RUDE_EDIT: "true"
+      DOTNET_WATCH_SUPPRESS_EMOJIS: "true"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+      DOTNET_NOLOGO: "true"
+    ports:
+      - "127.0.0.1:5080:8080"
+    volumes:
+      - .:/src
+      - nuget-packages:/root/.nuget/packages
+      # Keep the host's macOS bin/obj out of the Linux container (and vice versa).
+      - api-bin:/src/src/Starter.Api/bin
+      - api-obj:/src/src/Starter.Api/obj
+      - application-bin:/src/src/Starter.Application/bin
+      - application-obj:/src/src/Starter.Application/obj
+      - domain-bin:/src/src/Starter.Domain/bin
+      - domain-obj:/src/src/Starter.Domain/obj
+      - infrastructure-bin:/src/src/Starter.Infrastructure/bin
+      - infrastructure-obj:/src/src/Starter.Infrastructure/obj
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  nuget-packages:
+  api-bin:
+  api-obj:
+  application-bin:
+  application-obj:
+  domain-bin:
+  domain-obj:
+  infrastructure-bin:
+  infrastructure-obj:

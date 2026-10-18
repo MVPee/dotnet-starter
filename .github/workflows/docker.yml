@@ -1,0 +1,57 @@
+name: Docker
+
+# Path-filtered: do not mark this workflow as a required check, or PRs that skip it stay pending.
+on:
+  pull_request:
+    paths:
+      - "src/**"
+      - "Dockerfile"
+      - ".dockerignore"
+      - "Directory.Build.props"
+      - ".editorconfig"
+      - "Directory.Packages.props"
+      - "global.json"
+      - ".config/dotnet-tools.json"
+      - ".github/workflows/docker.yml"
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "Dockerfile"
+      - ".dockerignore"
+      - "Directory.Build.props"
+      - ".editorconfig"
+      - "Directory.Packages.props"
+      - "global.json"
+      - ".config/dotnet-tools.json"
+      - ".github/workflows/docker.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Never cancel main: every merged commit keeps a CI result.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  build-images:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        target: [runtime, migrations]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Build ${{ matrix.target }} image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: ${{ matrix.target }}
+          push: false
+          tags: starter-${{ matrix.target }}:ci
+          cache-from: type=gha,scope=${{ matrix.target }}
+          cache-to: type=gha,scope=${{ matrix.target }},mode=max

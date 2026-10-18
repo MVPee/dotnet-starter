@@ -1,0 +1,28 @@
+name: Setup .NET
+description: Install the SDK pinned in global.json, restore the NuGet cache, local tools and the solution.
+
+runs:
+  using: composite
+  steps:
+    - name: Configure NuGet cache location
+      shell: bash
+      run: echo "NUGET_PACKAGES=$GITHUB_WORKSPACE/.nuget/packages" >> "$GITHUB_ENV"
+
+    - uses: actions/setup-dotnet@v6
+      with:
+        global-json-file: global.json
+
+    # setup-dotnet's built-in cache requires packages.lock.json, which this repo doesn't use.
+    - uses: actions/cache@v6
+      with:
+        path: ${{ env.NUGET_PACKAGES }}
+        key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', 'Directory.Build.props', '**/*.csproj', '.config/dotnet-tools.json') }}
+        restore-keys: nuget-${{ runner.os }}-
+
+    - name: Restore tools
+      shell: bash
+      run: dotnet tool restore
+
+    - name: Restore
+      shell: bash
+      run: dotnet restore Starter.slnx
