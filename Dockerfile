@@ -2,7 +2,7 @@
 
 # Not pinned to $BUILDPLATFORM: dotnet-ef must load the startup assembly, which fails when the bundle RID differs from the SDK's arch.
 # Same SDK as global.json so analyzers (AnalysisLevel=latest) match CI.
-FROM mcr.microsoft.com/dotnet/sdk:10.0.401 AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0.100 AS build
 WORKDIR /src
 
 COPY global.json Directory.Build.props Directory.Packages.props .editorconfig ./
